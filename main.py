@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.markdown import Markdown
 from argparse import ArgumentParser
+from argparse import Namespace
 
 def main() -> None:
 
@@ -13,10 +14,10 @@ def main() -> None:
     parser = ArgumentParser(description='ChatBot')
     parser.add_argument('user_prompt', type=str, help='User prompt')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output')
-    args = parser.parse_args()
+    args: Namespace = parser.parse_args()
     
     # Env
-    API_KEY = os.environ["MISTRAL_API_KEY"]
+    API_KEY: str = os.environ["MISTRAL_API_KEY"]
 
     # Config
     config = Config(
@@ -31,7 +32,7 @@ def main() -> None:
     # Output
     agent = AIAgent(config)
     agent.add_prompt(args.user_prompt)
-    response = agent.invoke_prompt()
+    response: AIMessage = agent.invoke_prompt()
     agent.print_response(args.user_prompt, response)
 
         
@@ -55,12 +56,12 @@ class AIAgent:
         self.verbose = config.verbose
 
     def add_prompt(self, message: str) -> HumanMessage:
-        user_message = HumanMessage(content=message)
+        user_message: HumanMessage = HumanMessage(content=message)
         self.messages.append(user_message)
         return user_message
 
     def invoke_prompt(self) -> AIMessage:
-        response = self.llm.invoke(self.messages)
+        response: AIMessage = self.llm.invoke(self.messages)
         return response
 
     def print_response(self, message: str, response: AIMessage) -> None:
