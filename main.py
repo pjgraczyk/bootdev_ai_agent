@@ -1,4 +1,7 @@
+from langchain_core.messages import BaseMessage
+from logger import SqliteLogger
 import os
+import sqlite3
 from pydantic import BaseModel
 from langchain_mistralai import ChatMistralAI
 from langchain_core.messages import HumanMessage, AIMessage
@@ -25,15 +28,17 @@ def main() -> None:
         temperature=0.7,
         retries=3,
         model="mistral-tiny",
-        messages=[args.user_prompt],
+        messages=[],
         verbose=args.verbose,
     )
 
     # Output
-    agent = AIAgent(config)
-    agent.add_prompt(args.user_prompt)
-    response: AIMessage = agent.invoke_prompt()
-    agent.print_response(args.user_prompt, response)
+    with SqliteLogger() as logger:
+        agent = AIAgent(config)
+        agent.add_prompt(args.user_prompt)
+        response: AIMessage = agent.invoke_prompt()
+        agent.print_response(args.user_prompt, response)
+        logger.log_interaction(args.user_prompt, response)
 
         
 class Config(BaseModel):
@@ -41,7 +46,7 @@ class Config(BaseModel):
     temperature: float
     retries: int
     model: str
-    messages: list[str]
+    messages: list[BaseMessage]
     verbose: bool
 
 class AIAgent:
@@ -61,8 +66,9 @@ class AIAgent:
         return user_message
 
     def invoke_prompt(self) -> AIMessage:
-        response: AIMessage = self.llm.invoke(self.messages)
-        return response
+        ai_response: AIMessage = self.llm.invoke(self.messages)
+        self.messages.append(ai_response)
+        return ai_response
 
     def print_response(self, message: str, response: AIMessage) -> None:
         console = Console()
