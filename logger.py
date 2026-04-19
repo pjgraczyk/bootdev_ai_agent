@@ -13,6 +13,8 @@ else:
     AIMessage = Any
 
 LOGGER = logging.getLogger(__name__)
+UNKNOWN_TOOL_NAME = "unknown_tool"
+ERROR_MISSING_TOOL_NAME_STATUS = "error_missing_tool_name"
 
 
 class Logger(Protocol):
@@ -120,7 +122,11 @@ class SqliteLogger:
         try:
             return json.dumps(value, default=str, ensure_ascii=False)
         except TypeError:
-            LOGGER.warning("Falling back to string serialization for unsupported value type: %s", type(value).__name__)
+            LOGGER.warning(
+                "Falling back to string serialization for unsupported value type=%s sample=%r",
+                type(value).__name__,
+                value,
+            )
             return json.dumps(str(value), ensure_ascii=False)
 
     @staticmethod
@@ -151,6 +157,7 @@ class SqliteLogger:
         timestamp_value = extra_data.get("timestamp")
         if isinstance(timestamp_value, datetime):
             if timestamp_value.tzinfo is None:
+                LOGGER.warning("Naive datetime provided for timestamp; assuming UTC.")
                 timestamp = timestamp_value.replace(tzinfo=timezone.utc).isoformat()
             else:
                 timestamp = timestamp_value.astimezone(timezone.utc).isoformat()
@@ -204,8 +211,8 @@ class SqliteLogger:
                 tool_name = event.get("name") or event.get("tool_name")
                 status = event.get("status")
                 if not tool_name:
-                    tool_name = "unknown_tool"
-                    status = status or "error_missing_tool_name"
+                    tool_name = UNKNOWN_TOOL_NAME
+                    status = status or ERROR_MISSING_TOOL_NAME_STATUS
                 self.cursor.execute(
                     """
                     INSERT INTO tool_events (
