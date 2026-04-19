@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: bootdev-ai-agent
+Version: 0.1.0
+Requires-Python: >=3.11
+Requires-Dist: langchain>=1.2.15
+Requires-Dist: langchain-mistralai>=1.1.2
+Requires-Dist: pydantic>=2.13.0

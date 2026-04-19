@@ -72,12 +72,13 @@ class AIAgent:
 
     def print_response(self, message: str, response: AIMessage) -> None:
         console = Console()
+        response_text = response.content if isinstance(response.content, str) else "".join(str(item) for item in response.content) if isinstance(response.content, list) else str(response.content)
         if self.verbose:
             console.print("User prompt:", message, style="bold blue")
             console.print(f"Prompt tokens: {len(message.split())}", style="bold green")
-            console.print(f"Response tokens: {len(response.content.split())}", style="bold green")
+            console.print(f"Response tokens: {len(response_text.split())}", style="bold green")
         console.print("Response:", style="bold blue")
-        console.print(Panel(Markdown(response.content), border_style="green"))
+        console.print(Panel(Markdown(response_text), border_style="green"))
 
 if __name__ == "__main__":
     main()

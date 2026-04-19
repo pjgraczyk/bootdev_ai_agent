@@ -52,7 +52,7 @@ class SqliteLogger:
         try:
             if self.connection and exc_type is None:
                 self.connection.commit()
-            else:
+            elif self.connection:
                 print(f'There was an exception: {exc_type=} {exc_val=} {exc_tb=}')
                 self.connection.rollback()
             
@@ -64,11 +64,12 @@ class SqliteLogger:
             INSERT INTO {self.table_name} (timestamp, user_prompt, response, input_tokens, output_tokens, model_name)
                 VALUES(?, ?, ?, ?, ?, ?)
         """
-        input_tokens = response.usage_metadata['input_tokens']
-        output_tokens = response.usage_metadata['output_tokens']
+        input_tokens = response.usage_metadata.get('input_tokens') if response.usage_metadata else None
+        output_tokens = response.usage_metadata.get('output_tokens') if response.usage_metadata else None
         model_name = response.response_metadata.get("model_name") or response.response_metadata.get("model")
-        self.cursor.execute(dedent(sql_stmt), (datetime.now(), user_prompt, response.content, input_tokens, output_tokens, model_name))
-        self.connection.commit()
+        if self.cursor and self.connection:
+            self.cursor.execute(dedent(sql_stmt), (datetime.now(), user_prompt, response.content, input_tokens, output_tokens, model_name))
+            self.connection.commit()
 
     def close(self) -> None:
         if self.cursor:
