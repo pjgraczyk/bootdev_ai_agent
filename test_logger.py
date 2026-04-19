@@ -7,12 +7,26 @@ from logger import SqliteLogger
 
 
 class DummyResponse:
-    def __init__(self):
+    _DEFAULT = object()
+
+    def __init__(
+        self,
+        usage_metadata=_DEFAULT,
+        tool_calls=None,
+        additional_tool_calls=None,
+    ):
         self.content = "Hello from AI"
-        self.usage_metadata = {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+        self.usage_metadata = (
+            {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+            if usage_metadata is self._DEFAULT
+            else usage_metadata
+        )
         self.response_metadata = {"model_name": "mistral-tiny"}
-        self.tool_calls = [{"id": "call_1", "name": "read_file", "args": {"path": "main.py"}, "status": "success"}]
-        self.additional_kwargs = {"tool_calls": [{"id": "call_2", "name": "write_file", "args": {"path": "foo.txt"}}]}
+        self.tool_calls = tool_calls or [{"id": "call_1", "name": "read_file", "args": {"path": "main.py"}, "status": "success"}]
+        self.additional_kwargs = {
+            "tool_calls": additional_tool_calls
+            or [{"id": "call_2", "name": "write_file", "args": {"path": "foo.txt"}}]
+        }
 
 
 class TestSqliteLogger(unittest.TestCase):
@@ -46,6 +60,34 @@ class TestSqliteLogger(unittest.TestCase):
             cur.execute("SELECT COUNT(*) FROM agent_metadata_archive")
             self.assertEqual(cur.fetchone()[0], 1)
 
+            conn.close()
+
+    def test_missing_tool_name_and_serialization_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "agent_logs.db"
+            response = DummyResponse(
+                usage_metadata=None,
+                tool_calls=[{"id": "call_1", "args": {"path": "main.py"}}],
+                additional_tool_calls=[],
+            )
+            circular_value = []
+            circular_value.append(circular_value)
+
+            with self.assertLogs("logger", level="WARNING") as logs:
+                with SqliteLogger(str(db_path)) as logger:
+                    logger.log_interaction(
+                        "Prompt without tool name",
+                        response,  # type: ignore[arg-type]
+                        extra_data={"metadata": {"bad_payload": circular_value}},
+                    )
+
+            self.assertTrue(any("Falling back to string serialization" in line for line in logs.output))
+            self.assertTrue(any("usage_metadata is missing" in line for line in logs.output))
+
+            conn = sqlite3.connect(db_path)
+            cur = conn.cursor()
+            cur.execute("SELECT tool_name, status FROM tool_events")
+            self.assertEqual(cur.fetchone(), ("unknown_tool", "error_missing_tool_name"))
             conn.close()
 
 

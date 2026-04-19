@@ -121,7 +121,7 @@ class SqliteLogger:
             return None
         try:
             return json.dumps(value, default=str, ensure_ascii=False)
-        except TypeError:
+        except (TypeError, ValueError):
             LOGGER.warning(
                 "Falling back to string serialization for unsupported value type=%s sample=%r",
                 type(value).__name__,
@@ -167,6 +167,8 @@ class SqliteLogger:
             timestamp = datetime.now(timezone.utc).isoformat()
 
         usage_metadata = response.usage_metadata or {}
+        if response.usage_metadata is None:
+            LOGGER.warning("Response usage_metadata is missing; token usage will be stored as NULL where applicable.")
         input_tokens = usage_metadata.get("input_tokens")
         output_tokens = usage_metadata.get("output_tokens")
         total_tokens = usage_metadata.get("total_tokens")
