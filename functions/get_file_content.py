@@ -3,7 +3,16 @@ from pathlib import Path
 __all__: list[str] = ["get_file_content"]
 
 
-def get_file_content(working_directory: str, file_path: str) -> str:
+def get_file_content(working_directory: str, file_path: str, **kwargs) -> str:
+    """Get the content of a file.
+    
+    Args:
+        working_directory: The working directory path
+        file_path: Path to the file to read
+        
+    Returns:
+        str: File content (truncated if exceeds 10000 characters)
+    """
     working_dir: Path = Path(working_directory).resolve()
     target_file: Path = (working_dir / file_path).resolve()
     

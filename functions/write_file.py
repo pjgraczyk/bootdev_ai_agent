@@ -4,7 +4,17 @@ from pathlib import Path
 __all__: list[str] = ["write_file"]
 
 
-def write_file(working_directory: str, file_path: str, content: str) -> str:
+def write_file(working_directory: str, file_path: str, content: str, **kwargs) -> str:
+    """Write content to a file.
+    
+    Args:
+        working_directory: The working directory path
+        file_path: Path to the file to write
+        content: Content to write to the file
+        
+    Returns:
+        str: Success message or error description
+    """
     working_dir: Path = Path(working_directory).resolve()
     target_file: Path = (working_dir / file_path).resolve()
     

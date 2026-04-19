@@ -1,31 +1,31 @@
+import unittest
 from functions.get_file_content import get_file_content
 
-# Test 1: Large file truncation
-print("Test 1: Large file truncation")
-result = get_file_content("calculator", "lorem.txt")
-print(f"Length: {len(result)}")
-print(f"Truncated: {'[...File' in result}")
-print()
 
-# Test 2: Valid file
-print("Test 2: Valid file (main.py)")
-result = get_file_content("calculator", "main.py")
-print(result)
-print()
+class TestGetFileContent(unittest.TestCase):
+    def test_file_content_returned(self):
+        result = get_file_content("calculator", "lorem.txt")
+        self.assertGreater(len(result), 0)
+        self.assertNotIn("Error", result)
 
-# Test 3: Valid file in subdirectory
-print("Test 3: Valid file in subdirectory")
-result = get_file_content("calculator", "pkg/calculator.py")
-print(result)
-print()
+    def test_valid_file(self):
+        result = get_file_content("calculator", "main.py")
+        self.assertIsNotNone(result)
+        self.assertGreater(len(result), 0)
 
-# Test 4: File outside working directory
-print("Test 4: File outside working directory")
-result = get_file_content("calculator", "/bin/cat")
-print(result)
-print()
+    def test_valid_file_in_subdirectory(self):
+        result = get_file_content("calculator", "pkg/calculator.py")
+        self.assertIsNotNone(result)
+        self.assertGreater(len(result), 0)
 
-# Test 5: Non-existent file
-print("Test 5: Non-existent file")
-result = get_file_content("calculator", "pkg/does_not_exist.py")
-print(result)
+    def test_file_outside_working_directory(self):
+        result = get_file_content("calculator", "/bin/cat")
+        self.assertIn("Error", result)
+
+    def test_nonexistent_file(self):
+        result = get_file_content("calculator", "pkg/does_not_exist.py")
+        self.assertIn("Error", result)
+
+
+if __name__ == "__main__":
+    unittest.main()

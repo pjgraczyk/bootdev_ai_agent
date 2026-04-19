@@ -3,7 +3,16 @@ from pathlib import Path
 __all__: list[str] = ["get_files_info"]
 
 
-def get_files_info(working_directory: str, directory: str = ".") -> str:
+def get_files_info(working_directory: str, directory: str = ".", **kwargs) -> str:
+    """Get information about files in a directory.
+    
+    Args:
+        working_directory: The working directory path
+        directory: Directory path to list (default: current directory)
+        
+    Returns:
+        str: Formatted list of files with size and type information
+    """
     working_dir: Path = Path(working_directory).resolve()
     target_dir: Path = (working_dir / directory).resolve()
     items: list[str] = [f"Result for {target_dir}"]

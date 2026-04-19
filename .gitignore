@@ -1,5 +1,60 @@
+# Environment files
 .env
+.env.local
+.env*.local
+
+# Python
 **/__pycache__/*
+**/*.py[cod]
+*$py.class
+
+# Testing
 **/.pytest_cache/*
 **/.ruff_cache/*
+*.tox
+.coverage
+.htmlcov/
+
+# Virtual environments
 **/.venv/*
+.venv/
+venv/
+ENV/
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+*.sqlite3
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Dependency directories
+debug/
+
+# Node.js
+node_modules/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
