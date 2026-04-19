@@ -3,7 +3,7 @@ from pathlib import Path
 
 __all__: list[str] = ['run_python_file']
 
-def run_python_file(working_directory: str, file_path: str, args: list[str]=None):
+def run_python_file(working_directory: str, file_path: str, args: list[str] | None = None):
     working_dir: Path = Path(working_directory).resolve()
     target_filepath: Path = (working_dir / file_path).resolve()
     items: list[str] = [f"Result for {target_filepath}"]
@@ -14,7 +14,8 @@ def run_python_file(working_directory: str, file_path: str, args: list[str]=None
         if target_filepath.suffix != '.py':
             items.append(f'Error: "{file_path}" is not a Python file')
         command = ['python', target_filepath.absolute()]
-        command.extend(args)
+        if args:
+            command.extend(args)
         result = subprocess.run(command, capture_output=True)
         print(result)
     except ValueError:
