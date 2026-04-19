@@ -1,7 +1,5 @@
 import sys
-from pkg.calculator import Calculator
-from pkg.render import format_json_output
-
+from pkg import Calculator, format_json_output
 
 def main():
     calculator = Calculator()
