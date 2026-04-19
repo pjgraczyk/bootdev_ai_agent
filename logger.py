@@ -146,7 +146,10 @@ class SqliteLogger:
         extra_data = extra_data or {}
         timestamp_value = extra_data.get("timestamp")
         if isinstance(timestamp_value, datetime):
-            timestamp = timestamp_value.astimezone(timezone.utc).isoformat()
+            if timestamp_value.tzinfo is None or timestamp_value.tzinfo.utcoffset(timestamp_value) is None:
+                timestamp = timestamp_value.replace(tzinfo=timezone.utc).isoformat()
+            else:
+                timestamp = timestamp_value.astimezone(timezone.utc).isoformat()
         elif timestamp_value is not None:
             timestamp = str(timestamp_value)
         else:
@@ -194,6 +197,11 @@ class SqliteLogger:
             )
 
             for event in tool_events:
+                tool_name = event.get("name") or event.get("tool_name")
+                status = event.get("status")
+                if not tool_name:
+                    tool_name = "unknown_tool"
+                    status = status or "missing_tool_name"
                 self.cursor.execute(
                     """
                     INSERT INTO tool_events (
@@ -203,12 +211,12 @@ class SqliteLogger:
                     """,
                     (
                         interaction_id,
-                        str(event.get("name") or event.get("tool_name") or "unknown_tool"),
+                        str(tool_name),
                         event.get("id") or event.get("tool_call_id"),
                         event.get("type"),
                         self._serialize(event.get("args")),
                         self._serialize(event.get("result")),
-                        event.get("status"),
+                        status,
                         self._serialize(event),
                     ),
                 )
