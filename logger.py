@@ -3,6 +3,7 @@ from sqlite3 import OperationalError
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any, Protocol
 import json
+import logging
 import os
 import sqlite3
 
@@ -10,6 +11,8 @@ if TYPE_CHECKING:
     from langchain_core.messages import AIMessage
 else:
     AIMessage = Any
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Logger(Protocol):
@@ -117,6 +120,7 @@ class SqliteLogger:
         try:
             return json.dumps(value, default=str, ensure_ascii=False)
         except TypeError:
+            LOGGER.warning("Falling back to string serialization for unsupported value type: %s", type(value).__name__)
             return json.dumps(str(value), ensure_ascii=False)
 
     @staticmethod
@@ -146,7 +150,7 @@ class SqliteLogger:
         extra_data = extra_data or {}
         timestamp_value = extra_data.get("timestamp")
         if isinstance(timestamp_value, datetime):
-            if timestamp_value.tzinfo is None or timestamp_value.tzinfo.utcoffset(timestamp_value) is None:
+            if timestamp_value.tzinfo is None:
                 timestamp = timestamp_value.replace(tzinfo=timezone.utc).isoformat()
             else:
                 timestamp = timestamp_value.astimezone(timezone.utc).isoformat()
@@ -201,7 +205,7 @@ class SqliteLogger:
                 status = event.get("status")
                 if not tool_name:
                     tool_name = "unknown_tool"
-                    status = status or "missing_tool_name"
+                    status = status or "error_missing_tool_name"
                 self.cursor.execute(
                     """
                     INSERT INTO tool_events (
