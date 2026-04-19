@@ -157,8 +157,7 @@ class SqliteLogger:
         timestamp_value = extra_data.get("timestamp")
         if isinstance(timestamp_value, datetime):
             if timestamp_value.tzinfo is None:
-                LOGGER.warning("Naive datetime provided for timestamp; assuming UTC.")
-                timestamp = timestamp_value.replace(tzinfo=timezone.utc).isoformat()
+                raise ValueError("timestamp in extra_data must be timezone-aware")
             else:
                 timestamp = timestamp_value.astimezone(timezone.utc).isoformat()
         elif timestamp_value is not None:
@@ -166,9 +165,10 @@ class SqliteLogger:
         else:
             timestamp = datetime.now(timezone.utc).isoformat()
 
-        usage_metadata = response.usage_metadata or {}
-        if response.usage_metadata is None:
+        raw_usage_metadata = response.usage_metadata
+        if raw_usage_metadata is None:
             LOGGER.warning("Response usage_metadata is missing; token usage will be stored as NULL where applicable.")
+        usage_metadata = raw_usage_metadata or {}
         input_tokens = usage_metadata.get("input_tokens")
         output_tokens = usage_metadata.get("output_tokens")
         total_tokens = usage_metadata.get("total_tokens")

@@ -1,6 +1,7 @@
 import sqlite3
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 from logger import SqliteLogger
@@ -22,7 +23,7 @@ class DummyResponse:
             else usage_metadata
         )
         self.response_metadata = {"model_name": "mistral-tiny"}
-        self.tool_calls = tool_calls or [{"id": "call_1", "name": "read_file", "args": {"path": "main.py"}, "status": "success"}]
+        self.tool_calls = tool_calls or [{"id": "call_1", "name": "read_file", "args": {"path": "main.py"}}]
         self.additional_kwargs = {
             "tool_calls": additional_tool_calls
             or [{"id": "call_2", "name": "write_file", "args": {"path": "foo.txt"}}]
@@ -89,6 +90,19 @@ class TestSqliteLogger(unittest.TestCase):
             cur.execute("SELECT tool_name, status FROM tool_events")
             self.assertEqual(cur.fetchone(), ("unknown_tool", "error_missing_tool_name"))
             conn.close()
+
+    def test_rejects_naive_timestamp(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "agent_logs.db"
+            response = DummyResponse()
+
+            with SqliteLogger(str(db_path)) as logger:
+                with self.assertRaises(ValueError):
+                    logger.log_interaction(
+                        "Prompt with bad timestamp",
+                        response,  # type: ignore[arg-type]
+                        extra_data={"timestamp": datetime.now()},
+                    )
 
 
 if __name__ == "__main__":
