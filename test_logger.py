@@ -23,11 +23,16 @@ class DummyResponse:
             else usage_metadata
         )
         self.response_metadata = {"model_name": "mistral-tiny"}
-        self.tool_calls = tool_calls or [{"id": "call_1", "name": "read_file", "args": {"path": "main.py"}}]
-        self.additional_kwargs = {
-            "tool_calls": additional_tool_calls
-            or [{"id": "call_2", "name": "write_file", "args": {"path": "foo.txt"}}]
-        }
+        self.tool_calls = (
+            [{"id": "call_1", "name": "read_file", "args": {"path": "main.py"}}]
+            if tool_calls is None
+            else tool_calls
+        )
+        self.additional_kwargs = (
+            {"tool_calls": [{"id": "call_2", "name": "write_file", "args": {"path": "foo.txt"}}]}
+            if additional_tool_calls is None
+            else {"tool_calls": additional_tool_calls}
+        )
 
 
 class TestSqliteLogger(unittest.TestCase):

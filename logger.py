@@ -127,7 +127,7 @@ class SqliteLogger:
                 type(value).__name__,
                 value,
             )
-            return json.dumps(str(value), ensure_ascii=False)
+            return str(value)
 
     @staticmethod
     def _extract_tool_events(response: AIMessage) -> list[dict[str, Any]]:
@@ -157,7 +157,10 @@ class SqliteLogger:
         timestamp_value = extra_data.get("timestamp")
         if isinstance(timestamp_value, datetime):
             if timestamp_value.tzinfo is None:
-                raise ValueError("timestamp in extra_data must be timezone-aware")
+                raise ValueError(
+                    "timestamp in extra_data must be timezone-aware. "
+                    "Use datetime.now(timezone.utc) or .replace(tzinfo=timezone.utc)."
+                )
             else:
                 timestamp = timestamp_value.astimezone(timezone.utc).isoformat()
         elif timestamp_value is not None:
