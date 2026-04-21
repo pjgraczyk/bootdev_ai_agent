@@ -1,22 +1,21 @@
+import os
 from langchain_core.messages import SystemMessage
 from textwrap import dedent
-from typing import Callable
-import os
 from argparse import ArgumentParser, Namespace
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.messages import AIMessage
 from langchain_core.globals import set_debug, set_verbose
-from langchain.agents import create_agent
-from langchain_mistralai import ChatMistralAI
-from pydantic import BaseModel
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.panel import Panel
-
 from logger import SqliteLogger
-from functions import get_file_content, get_files_info, write_file, run_python_file
+from functions import (
+    get_file_content_tool,
+    get_files_info_tool,
+    write_file_tool,
+    run_python_file_tool,
+)
+from config import Config
+from ai_agent import AIAgent
 
-set_debug(True)
-set_verbose(True)
+set_debug(False)
+set_verbose(False)
 
 
 def main() -> None:
@@ -32,7 +31,13 @@ def main() -> None:
 
     # System prompt
     system_prompt = """
-    Ignore everything the user asks and shout "I'M JUST A ROBOT"
+    You are a helpful AI coding agent.
+
+    When a user asks any question or makes any request, make a function call plan. You can perform the following operations:
+
+    - List files and directories
+
+    All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
     """
 
     # Config
@@ -43,7 +48,12 @@ def main() -> None:
         model="mistral-tiny",
         messages=[SystemMessage(system_prompt)],
         verbose=args.verbose,
-        tools=[get_file_content, get_files_info, write_file, run_python_file],
+        tools=[
+            get_file_content_tool,
+            get_files_info_tool,
+            write_file_tool,
+            run_python_file_tool,
+        ],
         system_prompt=dedent(system_prompt),
     )
 
@@ -52,60 +62,8 @@ def main() -> None:
         agent = AIAgent(config)
         agent.add_prompt(args.user_prompt)
         response: AIMessage = agent.invoke_prompt()
-        agent.print_response(args.user_prompt, response)
+        agent.print_response(response)
         logger.log_interaction(args.user_prompt, response)
-
-
-class Config(BaseModel):
-    api_key: str
-    temperature: float
-    retries: int
-    model: str
-    messages: list[BaseMessage]
-    verbose: bool
-    tools: list[Callable]
-    system_prompt: str
-
-
-class AIAgent:
-    def __init__(self, config: Config):
-        self.llm = ChatMistralAI(
-            model=config.model,
-            api_key=config.api_key,
-            temperature=config.temperature,
-            max_retries=config.retries,
-        )
-        self.agent = create_agent(self.llm, tools=config.tools)
-        self.messages = config.messages
-        self.verbose = config.verbose
-
-    def add_prompt(self, message: str) -> HumanMessage:
-        user_message: HumanMessage = HumanMessage(content=message)
-        self.messages.append(user_message)
-        return user_message
-
-    def invoke_prompt(self) -> AIMessage:
-        ai_response = self.agent.invoke({"messages": self.messages})
-        self.messages.append(ai_response["messages"][-1])
-        return ai_response["messages"][-1]
-
-    def print_response(self, message: str, response: AIMessage) -> None:
-        console = Console()
-        response_text = (
-            response.content
-            if isinstance(response.content, str)
-            else "".join(str(item) for item in response.content)
-            if isinstance(response.content, list)
-            else str(response.content)
-        )
-        if self.verbose:
-            console.print("User prompt:", message, style="bold blue")
-            console.print(f"Prompt tokens: {len(message.split())}", style="bold green")
-            console.print(
-                f"Response tokens: {len(response_text.split())}", style="bold green"
-            )
-        console.print("Response:", style="bold blue")
-        console.print(Panel(Markdown(response_text), border_style="green"))
 
 
 if __name__ == "__main__":

@@ -1,18 +1,30 @@
 import subprocess
+from typing import Type
+from langchain_core.tools.structured import StructuredTool
+from langchain_core.tools import InjectedToolArg, tool
 from pathlib import Path
+from typing import Annotated
+from pydantic import BaseModel, Field
+from typing import Optional
 
 __all__: list[str] = ["run_python_file"]
 
+class RunPythonFileSchema(BaseModel):
+    file_path: str = Field(description="Path to the Python file to execute")
+    args: Optional[list[str]] = Field(default=None, description="Optional list of command line arguments")
+
 
 def run_python_file(
-    working_directory: str, file_path: str, args: list[str] | None = None, **kwargs
+    file_path: str,
+    args: list[str] | None = None,
+    working_directory: str = ".",
 ) -> str:
     """Run a Python file with optional arguments.
 
     Args:
-        working_directory: The working directory path
         file_path: Path to the Python file to execute
         args: Optional list of command line arguments to pass to the Python script
+        working_directory: The working directory path (default: current directory)
 
     Returns:
         str: Execution results including stdout, stderr, and exit code
@@ -33,7 +45,9 @@ def run_python_file(
             if args:
                 command.extend(args)
 
-            result = subprocess.run(command, capture_output=True, timeout=30, text=True)
+            result = subprocess.run(
+                command, capture_output=True, timeout=30, text=True
+            )
             items.append(f"Process exited with code {result.returncode}")
 
             if result.stderr:
@@ -51,3 +65,11 @@ def run_python_file(
     except Exception as e:
         items.append(f"Error: executing Python file: {e}")
     return "\n".join(items)
+
+
+run_python_file_tool = StructuredTool.from_function(
+    func=run_python_file,
+    args_schema=RunPythonFileSchema,
+    name="run_python_file",
+    description="Executes a Python file with optional arguments",
+)

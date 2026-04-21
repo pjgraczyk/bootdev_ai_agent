@@ -9,7 +9,9 @@ import sqlite3
 class Logger(Protocol):
     """Protocol that all loggers must follow."""
 
-    def log_interaction(self, user_prompt: str, response: AIMessage, tokens: dict) -> None:
+    def log_interaction(
+        self, user_prompt: str, response: AIMessage, tokens: dict
+    ) -> None:
         """Log a user-AI interaction."""
         ...
 
@@ -29,7 +31,7 @@ class SqliteLogger:
     def __enter__(self):
         self.connection = sqlite3.connect(self.db_path)
         self.cursor = self.connection.cursor()
-        self.table_name = 'agent_metadata_archive'
+        self.table_name = "agent_metadata_archive"
         sql_stmt = f"""
             CREATE TABLE IF NOT EXISTS {self.table_name} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,31 +46,61 @@ class SqliteLogger:
         try:
             self.cursor.execute(dedent(sql_stmt))
         except OperationalError:
-            raise Exception('The table creation has failed, please try again...')
+            raise Exception(
+                "The table creation has failed, please try again..."
+            )
 
         return self
-        
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             if self.connection and exc_type is None:
                 self.connection.commit()
             elif self.connection:
-                print(f'There was an exception: {exc_type=} {exc_val=} {exc_tb=}')
                 self.connection.rollback()
-            
+
         finally:
             self.close()
-                        
-    def log_interaction(self, user_prompt: str, response: AIMessage) -> None:
+
+    def log_interaction(self, user_prompt: str, response) -> None:
         sql_stmt = f"""
             INSERT INTO {self.table_name} (timestamp, user_prompt, response, input_tokens, output_tokens, model_name)
                 VALUES(?, ?, ?, ?, ?, ?)
         """
-        input_tokens = response.usage_metadata.get('input_tokens') if response.usage_metadata else None
-        output_tokens = response.usage_metadata.get('output_tokens') if response.usage_metadata else None
-        model_name = response.response_metadata.get("model_name") or response.response_metadata.get("model")
+        # Handle both dict and AIMessage responses
+        if isinstance(response, dict):
+            input_tokens = response.get("input_tokens")
+            output_tokens = response.get("output_tokens")
+            model_name = response.get("model_name") or response.get("model")
+            response_content = str(response.get("messages", ""))
+        else:
+            input_tokens = (
+                response.usage_metadata.get("input_tokens")
+                if response.usage_metadata
+                else None
+            )
+            output_tokens = (
+                response.usage_metadata.get("output_tokens")
+                if response.usage_metadata
+                else None
+            )
+            model_name = response.response_metadata.get(
+                "model_name"
+            ) or response.response_metadata.get("model")
+            response_content = response.content
+
         if self.cursor and self.connection:
-            self.cursor.execute(dedent(sql_stmt), (datetime.now(), user_prompt, response.content, input_tokens, output_tokens, model_name))
+            self.cursor.execute(
+                dedent(sql_stmt),
+                (
+                    datetime.now(),
+                    user_prompt,
+                    response_content,
+                    input_tokens,
+                    output_tokens,
+                    model_name,
+                ),
+            )
             self.connection.commit()
 
     def close(self) -> None:
