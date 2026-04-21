@@ -1,26 +1,20 @@
-from typing import Type
 from langchain_core.tools.structured import StructuredTool
-from langchain_core.tools import InjectedToolArg, tool
 from pathlib import Path
-from typing import Annotated
 from pydantic import BaseModel, Field
 
 __all__: list[str] = ["get_file_content"]
+
 
 class GetFileContentSchema(BaseModel):
     file_path: str = Field(description="Path to the file to read")
 
 
-def get_file_content(file_path: str, working_directory: str = ".") -> str:
-    """Get the content of a file.
+def get_file_content(
+    working_directory: str = ".", file_path: str | None = None
+) -> str:
+    if file_path is None:
+        return "Error: file_path parameter is required"
 
-    Args:
-        file_path: Path to the file to read
-        working_directory: The working directory path (default: current directory)
-
-    Returns:
-        str: File content (truncated if exceeds 10000 characters)
-    """
     working_dir: Path = Path(working_directory).resolve()
     target_file: Path = (working_dir / file_path).resolve()
 
@@ -33,11 +27,13 @@ def get_file_content(file_path: str, working_directory: str = ".") -> str:
             )
 
         MAX_CHARS = 10000
-        with open(target_file, "r", encoding="utf-8") as f:
-            content = f.read(MAX_CHARS)
-            if f.read(1):
-                content += f'[...File "{file_path}" truncated at {MAX_CHARS} characters]'
-        return content
+        text = target_file.read_text("utf-8")
+        if len(text) >= MAX_CHARS:
+            text = (
+                text[:MAX_CHARS]
+                + f'[...File "{file_path}" truncated at {MAX_CHARS} characters]'
+            )
+        return text
 
     except ValueError:
         return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'

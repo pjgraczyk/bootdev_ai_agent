@@ -7,31 +7,23 @@ import sqlite3
 
 
 class Logger(Protocol):
-    """Protocol that all loggers must follow."""
-
     def log_interaction(
         self, user_prompt: str, response: AIMessage, tokens: dict
-    ) -> None:
-        """Log a user-AI interaction."""
-        ...
+    ) -> None: ...
 
-    def close(self) -> None:
-        """Clean up resources."""
-        ...
+    def close(self) -> None: ...
 
 
 class SqliteLogger:
-    """Logs interactions to a SQLite database as a context manager."""
-
     def __init__(self, db_path: str = "data/agent_logs.db"):
         self.db_path = db_path
         self.connection = None
         self.cursor = None
+        self.table_name = "agent_metadata_archive"
 
     def __enter__(self):
         self.connection = sqlite3.connect(self.db_path)
         self.cursor = self.connection.cursor()
-        self.table_name = "agent_metadata_archive"
         sql_stmt = f"""
             CREATE TABLE IF NOT EXISTS {self.table_name} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +44,7 @@ class SqliteLogger:
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, *_):
         try:
             if self.connection and exc_type is None:
                 self.connection.commit()
@@ -63,11 +55,14 @@ class SqliteLogger:
             self.close()
 
     def log_interaction(self, user_prompt: str, response) -> None:
+        if self.connection is None:
+            self.connection = sqlite3.connect(self.db_path)
+            self.cursor = self.connection.cursor()
+
         sql_stmt = f"""
             INSERT INTO {self.table_name} (timestamp, user_prompt, response, input_tokens, output_tokens, model_name)
                 VALUES(?, ?, ?, ?, ?, ?)
         """
-        # Handle both dict and AIMessage responses
         if isinstance(response, dict):
             input_tokens = response.get("input_tokens")
             output_tokens = response.get("output_tokens")

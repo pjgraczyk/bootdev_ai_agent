@@ -2,6 +2,8 @@
 .env
 .env.local
 .env*.local
+*.yaml
+*.md
 
 # Python
 **/__pycache__/*

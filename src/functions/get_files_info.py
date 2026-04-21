@@ -24,7 +24,9 @@ def get_files_info(directory: str = ".", working_directory: str = ".") -> str:
     items = [f"Result for {target_dir}"]
     try:
         if not target_dir.is_relative_to(working_dir):
-            items.append(f'Error: "{directory}" is outside the permitted directory')
+            items.append(
+                f'Error: "{directory}" is outside the permitted directory'
+            )
             return "\n".join(items)
 
         if not target_dir.exists():

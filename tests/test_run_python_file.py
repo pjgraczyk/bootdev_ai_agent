@@ -8,7 +8,7 @@ class TestRunPythonFile(unittest.TestCase):
         self.assertIsNotNone(result)
 
     def test_run_python_file_main_with_args(self):
-        result = run_python_file("calculator", "main.py", ["3 + 5"])
+        result = run_python_file("main.py", "calculator", args=["3 + 5"])
         self.assertIsNotNone(result)
 
     def test_run_python_file_tests(self):

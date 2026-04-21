@@ -9,15 +9,18 @@ from typing import Optional
 
 __all__: list[str] = ["run_python_file"]
 
+
 class RunPythonFileSchema(BaseModel):
     file_path: str = Field(description="Path to the Python file to execute")
-    args: Optional[list[str]] = Field(default=None, description="Optional list of command line arguments")
+    args: Optional[list[str]] = Field(
+        default=None, description="Optional list of command line arguments"
+    )
 
 
 def run_python_file(
     file_path: str,
-    args: list[str] | None = None,
     working_directory: str = ".",
+    args: list[str] | None = None,
 ) -> str:
     """Run a Python file with optional arguments.
 

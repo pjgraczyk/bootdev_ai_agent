@@ -13,4 +13,5 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["calculator", "calculator.pkg", "functions"]
+package-dir = {"" = "src"}
+packages.find.where = ["src"]
