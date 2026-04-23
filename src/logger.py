@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 import sqlite3
 from datetime import datetime
 from sqlite3 import OperationalError
@@ -7,12 +8,18 @@ from typing import Protocol
 from langchain_core.messages import AIMessage
 
 
+class MetadataDict(BaseModel):
+    input_tokens: int
+    output_tokens: int
+    model_name: str
+
+
 class Logger(Protocol):
     def log_interaction(
         self,
         user_prompt: str,
         response: AIMessage,
-        tokens: dict,
+        tokens: MetadataDict,
     ) -> None: ...
 
     def close(self) -> None: ...
@@ -42,7 +49,7 @@ class SqliteLogger:
             raise Exception("The table creation has failed, please try again...")
 
     def log_interaction(
-        self, user_prompt: str, response: AIMessage, tokens: dict
+        self, user_prompt: str, response: AIMessage, metadata: MetadataDict
     ) -> None:
 
         sql_stmt = f"""
@@ -53,9 +60,11 @@ class SqliteLogger:
                 VALUES(?, ?, ?, ?, ?, ?)
         """
         # Extract token information from tokens dict or response object
-        input_tokens = tokens.get("input_tokens")
-        output_tokens = tokens.get("output_tokens")
-        model_name = tokens.get("model_name")
+        input_tokens, output_tokens, model_name = (
+            metadata.model_name,
+            metadata.output_tokens,
+            metadata.model_name,
+        )
         response_content = str(response.content)
 
         if self.cursor and self.connection:

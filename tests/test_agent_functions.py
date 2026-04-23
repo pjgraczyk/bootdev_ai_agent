@@ -34,31 +34,18 @@ class TestAgentFunctionCalls(unittest.TestCase):
     def test_agent_initialization(self) -> None:
         agent = AIAgent(self.mock_config)
         self.assertIsNotNone(agent)
-        self.assertIsNotNone(agent.message_history)
+        self.assertIsNotNone(agent.memory)
+        self.assertIsNotNone(agent.agent)
+        self.assertEqual(agent.thread_id, "default")
 
-    def test_add_prompt(self) -> None:
+    def test_agent_has_console(self) -> None:
         agent = AIAgent(self.mock_config)
-        user_message = agent.add_prompt("Hello, how are you?")
-        self.assertEqual(user_message.content, "Hello, how are you?")
+        self.assertIsNotNone(agent.console)
 
-    def test_get_message_history(self) -> None:
+    def test_agent_config(self) -> None:
         agent = AIAgent(self.mock_config)
-        agent.add_prompt("First message")
-        agent.add_prompt("Second message")
-
-        messages = agent.get_message_history()
-        self.assertEqual(len(messages), 3)
-
-    def test_get_user_messages(self) -> None:
-        """Test filtering user messages"""
-        agent = AIAgent(self.mock_config)
-        agent.add_prompt("User message 1")
-        agent.add_prompt("User message 2")
-
-        user_messages = agent.get_user_messages()
-        self.assertEqual(len(user_messages), 2)
-        self.assertEqual(user_messages[0].content, "User message 1")
-        self.assertEqual(user_messages[1].content, "User message 2")
+        self.assertEqual(agent.system_prompt, "You are a helpful AI assistant")
+        self.assertFalse(agent.verbose)
 
 
 if __name__ == "__main__":

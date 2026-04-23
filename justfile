@@ -6,7 +6,7 @@ alias r := run
 alias t := test
 alias c := clean
 
-script := 'main.py'
+script := 'src/main.py'
 
 run *args="Hello!":
     uv run {{ script }} "{{ args }}";

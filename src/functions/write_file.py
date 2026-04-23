@@ -29,14 +29,11 @@ def write_file(
         with open(target_file, "w", encoding="utf-8") as f:
             f.write(content)
 
-        return (
-            f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
-        )
+        return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
 
     except ValueError:
         return (
-            f'Error: Cannot write to "{file_path}" as it is outside '
-            "the permitted working directory"
+            f'Error: Cannot write to "{file_path}" as it is outside the permitted working directory'
         )
     except Exception as e:
         return f"Error: {e!s}"

@@ -15,3 +15,16 @@ dependencies = [
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages.find.where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.pyrefly]
+search_path = ["src"]
+project_includes = ["src/**/*.py"]
+python-version = '>=3.11'

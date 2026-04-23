@@ -39,8 +39,7 @@ def get_files_info(directory: str = ".", working_directory: str = ".") -> str:
             for item in target_dir.iterdir():
                 stats = item.lstat()
                 items.append(
-                    f"\t- {item.name}: size={stats.st_size} bytes, "
-                    f"is_dir={item.is_dir()}",
+                    f"\t- {item.name}: size={stats.st_size} bytes, is_dir={item.is_dir()}",
                 )
 
     except PermissionError:

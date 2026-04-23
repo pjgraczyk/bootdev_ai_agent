@@ -29,17 +29,11 @@ def get_file_content(
         MAX_CHARS = 10000
         text = target_file.read_text("utf-8")
         if len(text) >= MAX_CHARS:
-            text = (
-                text[:MAX_CHARS]
-                + f'[...File "{file_path}" truncated at {MAX_CHARS} characters]'
-            )
+            text = text[:MAX_CHARS] + f'[...File "{file_path}" truncated at {MAX_CHARS} characters]'
         return text
 
     except ValueError:
-        return (
-            f'Error: Cannot read "{file_path}" as it is outside '
-            "the permitted working directory"
-        )
+        return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
     except Exception as e:
         return f"Error: {e!s}"
 
