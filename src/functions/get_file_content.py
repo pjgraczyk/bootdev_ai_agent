@@ -1,5 +1,6 @@
-from langchain_core.tools.structured import StructuredTool
 from pathlib import Path
+
+from langchain_core.tools.structured import StructuredTool
 from pydantic import BaseModel, Field
 
 __all__: list[str] = ["get_file_content"]
@@ -10,7 +11,8 @@ class GetFileContentSchema(BaseModel):
 
 
 def get_file_content(
-    working_directory: str = ".", file_path: str | None = None
+    working_directory: str = ".",
+    file_path: str | None = None,
 ) -> str:
     if file_path is None:
         return "Error: file_path parameter is required"
@@ -22,9 +24,7 @@ def get_file_content(
         target_file.relative_to(working_dir)
 
         if not target_file.is_file():
-            return (
-                f'Error: File not found or is not a regular file: "{file_path}"'
-            )
+            return f'Error: File not found or is not a regular file: "{file_path}"'
 
         MAX_CHARS = 10000
         text = target_file.read_text("utf-8")
@@ -36,9 +36,12 @@ def get_file_content(
         return text
 
     except ValueError:
-        return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
+        return (
+            f'Error: Cannot read "{file_path}" as it is outside '
+            "the permitted working directory"
+        )
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Error: {e!s}"
 
 
 get_file_content_tool = StructuredTool.from_function(

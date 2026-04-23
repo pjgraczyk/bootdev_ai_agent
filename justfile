@@ -13,6 +13,9 @@ run *args="Hello!":
 
 test:
     uv run python -m unittest discover -p 'test*.py' -s 'tests/'
+    pyrefly check
+    ruff check
+    ruff format
 
 clean:
     #!/bin/sh

@@ -1,12 +1,15 @@
-from tool_registry import TOOL_REGISTRY
-from logger import SqliteLogger
-from config import Config
 from ai_agent import AIAgent
 from cli_args import parse_arguments
+from logger import SqliteLogger
+
+from config import Config
+from tool_registry import TOOL_REGISTRY
 
 
 def run_interactive_mode(
-    agent: AIAgent, logger: SqliteLogger, initial_prompt: str
+    agent: AIAgent,
+    logger: SqliteLogger,
+    initial_prompt: str,
 ) -> None:
     prompt = initial_prompt
     while True:

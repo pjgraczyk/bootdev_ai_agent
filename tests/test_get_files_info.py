@@ -1,21 +1,22 @@
 import unittest
+
 from functions.get_files_info import get_files_info
 
 
 class TestGetFilesInfo(unittest.TestCase):
-    def test_current_directory(self):
+    def test_current_directory(self) -> None:
         result = get_files_info("calculator", ".")
         self.assertIsNotNone(result)
 
-    def test_subdirectory(self):
+    def test_subdirectory(self) -> None:
         result = get_files_info("calculator", "pkg")
         self.assertIsNotNone(result)
 
-    def test_absolute_path(self):
+    def test_absolute_path(self) -> None:
         result = get_files_info("calculator", "/bin")
         self.assertIsNotNone(result)
 
-    def test_parent_directory(self):
+    def test_parent_directory(self) -> None:
         result = get_files_info("calculator", "../")
         self.assertIsNotNone(result)
 

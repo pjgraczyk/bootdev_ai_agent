@@ -1,13 +1,14 @@
-import unittest
 import tempfile
+import unittest
 from pathlib import Path
+from unittest.mock import Mock
+
 from ai_agent import AIAgent
 from config import Config
-from unittest.mock import Mock
 
 
 class TestAgentFunctionCalls(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
         self.test_file = Path(self.temp_dir) / "test_file.txt"
         self.test_file.write_text("test content")
@@ -25,22 +26,22 @@ class TestAgentFunctionCalls(unittest.TestCase):
         self.mock_config.system_prompt = "You are a helpful AI assistant"
         self.mock_config.tools = []
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         import shutil
 
         shutil.rmtree(self.temp_dir)
 
-    def test_agent_initialization(self):
+    def test_agent_initialization(self) -> None:
         agent = AIAgent(self.mock_config)
         self.assertIsNotNone(agent)
         self.assertIsNotNone(agent.message_history)
 
-    def test_add_prompt(self):
+    def test_add_prompt(self) -> None:
         agent = AIAgent(self.mock_config)
         user_message = agent.add_prompt("Hello, how are you?")
         self.assertEqual(user_message.content, "Hello, how are you?")
 
-    def test_get_message_history(self):
+    def test_get_message_history(self) -> None:
         agent = AIAgent(self.mock_config)
         agent.add_prompt("First message")
         agent.add_prompt("Second message")
@@ -48,7 +49,7 @@ class TestAgentFunctionCalls(unittest.TestCase):
         messages = agent.get_message_history()
         self.assertEqual(len(messages), 3)
 
-    def test_get_user_messages(self):
+    def test_get_user_messages(self) -> None:
         """Test filtering user messages"""
         agent = AIAgent(self.mock_config)
         agent.add_prompt("User message 1")

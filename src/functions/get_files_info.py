@@ -1,5 +1,6 @@
-from langchain_core.tools.structured import StructuredTool
 from pathlib import Path
+
+from langchain_core.tools.structured import StructuredTool
 from pydantic import BaseModel, Field
 
 __all__: list[str] = ["get_files_info"]
@@ -18,6 +19,7 @@ def get_files_info(directory: str = ".", working_directory: str = ".") -> str:
 
     Returns:
         str: Formatted list of files with size and type information
+
     """
     working_dir = Path(working_directory).resolve()
     target_dir = (working_dir / directory).resolve()
@@ -25,7 +27,7 @@ def get_files_info(directory: str = ".", working_directory: str = ".") -> str:
     try:
         if not target_dir.is_relative_to(working_dir):
             items.append(
-                f'Error: "{directory}" is outside the permitted directory'
+                f'Error: "{directory}" is outside the permitted directory',
             )
             return "\n".join(items)
 
@@ -37,13 +39,14 @@ def get_files_info(directory: str = ".", working_directory: str = ".") -> str:
             for item in target_dir.iterdir():
                 stats = item.lstat()
                 items.append(
-                    f"\t- {item.name}: size={stats.st_size} bytes, is_dir={item.is_dir()}"
+                    f"\t- {item.name}: size={stats.st_size} bytes, "
+                    f"is_dir={item.is_dir()}",
                 )
 
     except PermissionError:
         items.append(f"Error: Permission denied for {directory}")
     except Exception as e:
-        items.append(f"Error: {str(e)}")
+        items.append(f"Error: {e!s}")
 
     return "\n".join(items)
 
@@ -52,5 +55,8 @@ get_files_info_tool = StructuredTool.from_function(
     func=get_files_info,
     args_schema=GetFilesInfoSchema,
     name="get_files_info",
-    description="Lists files in a specified directory relative to the working directory, providing file size and directory status",
+    description=(
+        "Lists files in a specified directory relative to the working directory, "
+        "providing file size and directory status"
+    ),
 )

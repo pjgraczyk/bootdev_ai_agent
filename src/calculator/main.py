@@ -1,8 +1,9 @@
 import sys
+
 from calculator.pkg import Calculator, format_json_output
 
 
-def main():
+def main() -> None:
     calculator = Calculator()
     if len(sys.argv) <= 1:
         return
@@ -11,10 +12,8 @@ def main():
     try:
         result = calculator.evaluate(expression)
         if result is not None:
-            to_print = format_json_output(expression, result)
-        else:
-            pass
-    except Exception as e:
+            print(format_json_output(expression, result))
+    except Exception:
         pass
 
 
